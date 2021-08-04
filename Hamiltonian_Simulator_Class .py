@@ -27,46 +27,93 @@ class Hamiltonian_Simulator:
     ## Methods---------------------------------------------------------
     #++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
     
+    # N = Numerical Solution
+    # T = Trotter Non-Sparse Solution
+    # TS = Trotter Sparse Solution
+    # Q = Qutip Solution
+    # The order of the output lists goes as follows(only included if specified in args):
+        # 1-Numerical 2-Trotter non-sparse 3-Trotter sparse 4-Qutip
     
-    def benchmark(self, qubits_nums, initial_states, Js, h, trotter_nums, times, options):
-        
-        print("Starting Numerical Simulation")
-        numerical_times = []
-        numerical_states_at_diff_qubits = []
-        
-        # Time performance
-        begin_time = time.time()
-
-        for i in range(len(Js)):
-            states = numerical_sim(initial_states[i], Js[i], h, times)
-            numerical_times.append(states[1])
-            numerical_states_at_diff_qubits.append(states[0])
-            print(str(i + 1) + " qubits: done")
+    def benchmark(self, qubits_nums, initial_states, Js, h, trotter_nums, times, options, args):
+        output = []
+        if 'N' in args:
+            ## Numerical-----------------------------------------------------
+            print("Starting Numerical Simulation")
+            numerical_states_at_diff_qubits = []
             
-        numerical_entire_sim_time = time.time() - begin_time
-        print("Numerical simulation done")
-        print("Total time to complete Numerical simulation is " + str(numerical_entire_sim_time) + ".")
+            # Time performance
+            begin_time = time.time()
+
+            for i in range(len(Js)):
+                states = numerical_sim(initial_states[i], Js[i], h, times)
+                numerical_states_at_diff_qubits.append(states)
+                print(str(i + 1) + " qubits: done")
+            output.append(["N", numerical_states_at_diff_qubits])    
+            numerical_entire_sim_time = time.time() - begin_time
+            print("Numerical simulation done")
+            print("Total time to complete Numerical simulation is " + str(numerical_entire_sim_time) + ".")
         
-        # Time performance
-        begin_time = time.time()
         
-        trotter_times = []
-        trotter_states_at_diff_qubits_at_diff_trotter_num = []# a list of a list(states for n qubits at diff trotter nums) 
-                                                              # of a list(states for spe)
-        for i in range(len(Js)):
-            t = []
-            trotter_states_for_diff_trotter_num = []
-            for j in range(len(trotter_nums)):
-                states = trotter_sim(initial_states[i], Js[i], h, trotter_nums[j], times)
-                trotter_states_for_diff_trotter_num.append(states[0])
-                t.append(states[1])
-            trotter_states_at_diff_qubits_at_diff_trotter_num.append(trotter_states_for_diff_trotter_num)
-            trotter_times.append(t)
-            print(str(i + 1) + " qubits: done")
-        trotter_entire_sim_time = time.time() - begin_time
-        print("Qutip simulation done")
-        print("Total time to complete qutip simulation is " + str(trotter_entire_sim_time) + ".")
+        if 'T' in args:
+            ## Trotter non-sparse---------------------------------------------
+            print("Starting Trotter non-sparse Simulation")
+            # Time performance
+            begin_time = time.time()
+            
+            trotter_states_at_diff_qubits_at_diff_trotter_num = []# a list of a list(states for n qubits at diff trotter nums) 
+                                                                  # of a list(states for spe)
+            for i in range(len(Js)):
+                t = []
+                trotter_states_for_diff_trotter_num = []
+                for j in range(len(trotter_nums)):
+                    states = trotter_sim(initial_states[i], Js[i], h, trotter_nums[j], times)
+                    trotter_states_for_diff_trotter_num.append(states)
+                trotter_states_at_diff_qubits_at_diff_trotter_num.append(trotter_states_for_diff_trotter_num)
+                print(str(i + 1) + " qubits: done")
+            output.append(["T", trotter_states_at_diff_qubits_at_diff_trotter_num])
+            trotter_entire_sim_time = time.time() - begin_time
+            print("Trotter non-sparse simulation done")
+            print("Total time to complete Trotter non-sparse simulation is " + str(trotter_entire_sim_time) + ".")
         
+        if 'TS' in args:
+            ## Trotter Sparse-------------------------------------------------
+            print("Starting Trotter sparse Simulation")
+            # Time performance
+            begin_time = time.time()
+            
+            sparsetrotter_states_at_diff_qubits_at_diff_trotter_num = []# a list of a list(states for n qubits at diff trotter nums) 
+                                                                  # of a list(states for spe) 
+
+            for i in range(len(Js)):
+                sparse_trotter_states_for_diff_trotter_num = []
+                for j in range(len(trotter_nums)):
+                    states = sparse_trotter_sim(initial_states[i], Js[i], h, trotter_nums[j], times)
+                    sparse_trotter_states_for_diff_trotter_num.append(states)
+                sparse_trotter_states_at_diff_qubits_at_diff_trotter_num.append(sparse_trotter_states_for_diff_trotter_num)
+                print(str(i + 1) + " qubits: done")
+            output.append(["TS", sparse_trotter_states_at_diff_qubits_at_diff_trotter_num])
+            sparse_trotter_entire_sim_time = time.time() - begin_time
+            print("Trotter sparse simulation done")
+            print("Total time to complete Trotter sparse simulation is " + str(sparse_trotter_entire_sim_time) + ".")
+           
+        if 'Q' in args:
+            ## Qutip----------------------------------------------------------
+            print("Starting Qutip Simulation")
+            # Time performance
+            begin_time = time.time()
+            
+            qutip_states_at_diff_qubits = []
+
+            for i in range(len(Js)):
+                states = qutip_sim(initial_states[i], Js[i], h, times, options)
+                qutip_states_at_diff_qubits.append(states)
+                print(str(i + 1) + " qubits: done")
+            
+            output.append(["Q", qutip_states_at_diff_qubits])
+            qutip_entire_sim_time = time.time() - begin_time
+            print("Qutip simulation done")
+            print("Total time to complete Qutip simulation is " + str(qutip_entire_sim_time) + ".")
+        return output
         
         
     # perfrom qutip simulation for an n-qubits system where n = len(J). 
@@ -76,7 +123,7 @@ class Hamiltonian_Simulator:
     # options is of type Options() to control the qutip integrator.
     # returns a list of Qobj of type ket representing the state of the system at every time point in times.
     # returns the time needed to simulate
-    def qutip_simulate(self, initial_state, J, h, times, options):
+    def qutip_sim(self, initial_state, J, h, times, options):
         
         # Time performance
         begin_time = time.time()
@@ -274,8 +321,12 @@ class Hamiltonian_Simulator:
 h = 1
 J = np.array([[1, 1], [1, 1]])
 initial_state = tensor(basis(2, 0), basis(2, 0))
+options = Options()
 trotter_num = 100
 times = np.linspace(0.0, 10, 100)
 s = Hamiltonian_Simulator()
 r = s.numerical_sim(initial_state, J, h, times)
-print(r)
+r = s.sparse_trotter_sim(initial_state, J, h, 100, times)
+r = s.trotter_sim(initial_state, J, h, 100, times)
+r = s.qutip_sim(initial_state, J, h, times, options)
+# print(r)
